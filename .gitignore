@@ -30,6 +30,16 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# === Tài liệu học cá nhân (không cần đưa lên repo) ===
+HOC-BACKEND-NODEJS.md
+**/HOC-BACKEND-NODEJS.md
+
+# === File rác / không cần thiết ===
+Chon
+desktop.ini
+*.ico
+folderIcon_*.ico
+
 # === Editor / OS ===
 .vscode/*
 !.vscode/extensions.json

@@ -125,9 +125,13 @@ export const signIn = async (req, res) => {
 
     // trả refresh token về trong cookie
     res.cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none", //backend, frontend deploy riêng
+      httpOnly: true, // JS client không đọc được -> chống XSS đánh cắp token
+      secure: true, // chỉ gửi qua HTTPS
+      // LỚP 8: CHỐNG CSRF. "lax" -> trình duyệt KHÔNG gửi cookie này trong request
+      // cross-site (từ web khác) -> chặn tấn công giả mạo request. Hoạt động tốt vì
+      // frontend & backend giờ cùng origin (phục vụ chung). (Nếu sau này deploy tách
+      // domain Render/Vercel thì đổi lại "none".)
+      sameSite: "lax",
       maxAge: REFRESH_TOKEN_TTL,
     });
 

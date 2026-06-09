@@ -59,7 +59,7 @@ export const updateProfile = async (req, res) => {
     const userId = req.user._id;
     const { displayName, phone, bio, email } = req.body;
 
-    const setOps = {};
+    const setOps = {}; 
     const unsetOps = {};
 
     if (displayName !== undefined) setOps.displayName = displayName.trim();

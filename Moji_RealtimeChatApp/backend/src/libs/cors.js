@@ -8,12 +8,12 @@ const devOrigins = [
 ];
 
 export const corsOrigin = (origin, callback) => {
-  // không có origin: request cùng origin / công cụ (Postman) -> cho qua
-  if (!origin) return callback(null, true);
-
-  if (devOrigins.includes(origin) || origin === process.env.CLIENT_URL) {
-    return callback(null, true);
-  }
-
-  return callback(new Error("Không được phép bởi CORS"), false);
+  // App cá nhân chạy sau Dev Tunnel: CHO PHÉP MỌI ORIGIN (phản chiếu lại origin).
+  // Lý do: Dev Tunnels relay có thể đổi/biến dạng header Origin khi chuyển tiếp
+  // (dạng có cổng ":5001" vs dạng gạch ngang "-5001"), nên kiểm tra theo origin
+  // không đáng tin. Bảo mật API đã được JWT (access token) + cookie đảm nhiệm,
+  // nên việc cho phép mọi origin là an toàn cho mục đích này.
+  // (devOrigins giữ lại để tham khảo, không còn dùng để chặn.)
+  void devOrigins;
+  return callback(null, true);
 };

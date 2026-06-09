@@ -37,6 +37,27 @@
 
 ---
 
+## 🔒 Bảo mật — 12 lớp phòng thủ (Defense in Depth)
+
+Dự án áp dụng nhiều lớp bảo mật theo tinh thần **OWASP**:
+
+| # | Lớp | Cách triển khai |
+|---|-----|-----------------|
+| 1 | HTTPS/TLS | Chạy sau reverse proxy / tunnel HTTPS |
+| 2 | **Authentication** | JWT access token + refresh token; mật khẩu hash bằng **bcrypt** |
+| 3 | **Authorization** | Phân quyền theo **role** (admin) + theo **tài nguyên** (thành viên nhóm, bạn bè) |
+| 4 | **Validation** | **Zod** validate tập trung ở tầng middleware |
+| 5 | Chống XSS | React tự escape output |
+| 6 | Chống **NoSQL Injection** | Middleware làm sạch `req.body` (lọc toán tử `$` / `.`) + validate kiểu |
+| 7 | **Rate Limiting** | **express-rate-limit** — chặn brute-force đăng nhập & spam |
+| 8 | Chống **CSRF** | Refresh token trong cookie `httpOnly` + `SameSite=Lax` |
+| 9 | **Security Headers** | **Helmet** (HSTS, X-Frame-Options, nosniff...) |
+| 10 | Secrets Management | Biến bí mật trong `.env` (không hard-code) |
+| 11 | **Error Handling** | Xử lý lỗi tập trung, không lộ stack trace ra client |
+| 12 | Dependency Audit | `npm audit` — 0 lỗ hổng |
+
+---
+
 ## 🛠️ Công nghệ
 
 | Frontend | Backend |
@@ -47,7 +68,7 @@
 | Zustand (state) | JWT (auth) + bcrypt |
 | React Router | Multer (upload file) |
 | Recharts (biểu đồ) | Nodemailer (email) |
-| Socket.IO Client | |
+| Socket.IO Client | **Helmet · express-rate-limit · Zod** (bảo mật) |
 
 ---
 
@@ -128,7 +149,9 @@ Moji_RealtimeChatApp/
       controllers/  # auth, user, friend, message, conversation, admin
       models/       # User, Conversation, Message, Friend, ...
       routes/       # các route API
-      middlewares/  # auth, admin, upload
+      middlewares/  # auth, admin, upload, rateLimiter, sanitize, validate, errorHandler
+      validations/  # schema Zod (validate đầu vào)
+      libs/         # db, cors, email
       socket/       # cấu hình Socket.IO
   frontend/       # React + Vite + TypeScript
     src/
@@ -137,4 +160,5 @@ Moji_RealtimeChatApp/
       stores/       # zustand stores
       services/     # gọi API
 screenshots/      # ảnh giao diện
+start-website.bat # (Windows) chạy nhanh backend + Dev Tunnel để chia sẻ web tạm thời
 ```
