@@ -35,10 +35,38 @@ app.set("trust proxy", 1);
 // Tắt CSP vì frontend được build thành 1 file HTML có inline script/style (CSP sẽ chặn).
 app.use(
   helmet({
-    contentSecurityPolicy: false,
+    // CSP: cho phép đúng những nguồn app thực sự dùng.
+    // - 'unsafe-inline' cho script/style: BẮT BUỘC vì frontend build single-file (nhúng inline).
+    // - cdn.jsdelivr.net: bộ chọn emoji (@emoji-mart) tải data + ảnh từ đây.
+    // - data:/blob: cho ảnh base64 (avatar, ảnh chat) và preview.
+    // - wss:/ws: cho Socket.IO realtime.
+    contentSecurityPolicy: {
+      useDefaults: true,
+      directives: {
+        scriptSrc: ["'self'", "'unsafe-inline'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", "data:", "blob:", "https://cdn.jsdelivr.net"],
+        mediaSrc: ["'self'", "blob:"],
+        // 'self' đã bao gồm WebSocket (wss) cùng origin -> KHÔNG cần "wss:"/"ws:"
+        // (bỏ scheme-wildcard để hết alert "CSP: Wildcard Directive" của ZAP).
+        connectSrc: ["'self'", "https://cdn.jsdelivr.net"],
+        // font dùng nội bộ + data: (không tải font ngoài) -> bỏ "https:" wildcard.
+        fontSrc: ["'self'", "data:"],
+      },
+    },
     crossOriginEmbedderPolicy: false,
   })
 );
+
+// Permissions-Policy: chặn các quyền nhạy cảm mà app KHÔNG dùng
+// (camera, micro, định vị, thanh toán...) -> giảm bề mặt tấn công.
+app.use((req, res, next) => {
+  res.setHeader(
+    "Permissions-Policy",
+    "geolocation=(), camera=(), microphone=(), payment=(), usb=()"
+  );
+  next();
+});
 
 // middlewares
 app.use(express.json({ limit: "10mb" })); // limit lớn để nhận ảnh base64

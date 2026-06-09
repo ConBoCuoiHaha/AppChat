@@ -1,5 +1,5 @@
-// Cho phép các cổng dev thường gặp của Vite (5173/5174/5175...) + CLIENT_URL khi deploy.
-// Tránh lỗi CORS khi Vite tự nhảy cổng nếu cổng mặc định bị chiếm.
+// Quy tắc CORS: chỉ cho phép các origin tin cậy (whitelist), KHÔNG phản chiếu
+// origin lạ (chống lỗ hổng "CORS reflect any origin + credentials").
 const devOrigins = [
   "http://localhost:5173",
   "http://localhost:5174",
@@ -8,12 +8,26 @@ const devOrigins = [
 ];
 
 export const corsOrigin = (origin, callback) => {
-  // App cá nhân chạy sau Dev Tunnel: CHO PHÉP MỌI ORIGIN (phản chiếu lại origin).
-  // Lý do: Dev Tunnels relay có thể đổi/biến dạng header Origin khi chuyển tiếp
-  // (dạng có cổng ":5001" vs dạng gạch ngang "-5001"), nên kiểm tra theo origin
-  // không đáng tin. Bảo mật API đã được JWT (access token) + cookie đảm nhiệm,
-  // nên việc cho phép mọi origin là an toàn cho mục đích này.
-  // (devOrigins giữ lại để tham khảo, không còn dùng để chặn.)
-  void devOrigins;
-  return callback(null, true);
+  // Không có origin: request cùng origin / công cụ (Postman) -> cho qua
+  if (!origin) return callback(null, true);
+
+  // Các origin dev + CLIENT_URL khi deploy
+  if (devOrigins.includes(origin) || origin === process.env.CLIENT_URL) {
+    return callback(null, true);
+  }
+
+  // Cho phép mọi tunnel Dev Tunnels (vd: https://hung-sieunhan-5001.asse.devtunnels.ms)
+  try {
+    const host = new URL(origin).hostname;
+    if (host.endsWith(".devtunnels.ms")) {
+      return callback(null, true);
+    }
+  } catch {
+    // origin không hợp lệ -> coi như không thuộc whitelist
+  }
+
+  // Origin KHÔNG thuộc whitelist:
+  // callback(null, false) -> cors KHÔNG gắn header Access-Control-Allow-Origin
+  // (trình duyệt sẽ tự chặn). KHÔNG ném Error để tránh trả 500.
+  return callback(null, false);
 };
